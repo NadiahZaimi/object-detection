@@ -6,7 +6,7 @@ import nest_asyncio
 from pyngrok import ngrok
 from ultralytics import YOLO
 from oos_detection import out_of_stock_product, complience_maggi, complience_nestle, nestle_eye_level_check, maggi_eye_level_check
-
+#haloo
 
 app = Flask(__name__)
 model = YOLO('best_246.pt')
@@ -98,26 +98,6 @@ def predict():
                 eye_level_status_maggi = "-"
                 comp_nestle = "-"
                 eye_level_status_nestle = "-"
-        
-        # if oos_nestle_koko == "No" or oos_nestle_milo == "No":
-        #     if oos_nestle_star == "No":
-        #         # Process only complience_nestle and nestle_eye_level_check
-        #         comp_maggi = "-"
-        #         comp_nestle = complience_nestle(product_names)
-        #         eye_level_status_nestle = nestle_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
-        #         eye_level_status_maggi = "-"
-        # elif oos_maggi_kari == "No" or oos_maggi_tomyam == "No" or oos_nestle_koko == "No" or oos_nestle_milo == "No" or oos_nestle_star == "No":
-        #     # All OOS statuses are "No," process all checks
-        #     comp_maggi = complience_maggi(product_names)
-        #     comp_nestle = complience_nestle(product_names)
-        #     eye_level_status_nestle = nestle_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
-        #     eye_level_status_maggi = maggi_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
-        # else:
-        #     # If none of the above conditions are met, set compliance and eye level checks as "N/A"
-        #     comp_maggi = "-"
-        #     comp_nestle = "-"
-        #     eye_level_status_nestle = "-"
-        #     eye_level_status_maggi = "-"
 
         # Return the path to the saved annotated image and the out of stock result in JSON format
         response = {
