@@ -1,10 +1,12 @@
 import io
 from PIL import Image, ImageDraw, ImageFont
 import os
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 import nest_asyncio
 from pyngrok import ngrok
 from ultralytics import YOLO
+from oos_detection import out_of_stock_product, complience_maggi, complience_nestle, nestle_eye_level_check, maggi_eye_level_check
+
 
 app = Flask(__name__)
 model = YOLO('best_246.pt')
@@ -16,6 +18,31 @@ output_folder = "annotated_images"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
+#Put outsite so all can access    
+item_list = [
+    "fn kundur",
+    "fn lemontea",
+    "jnj twin",
+    "maggi kari unsorted",
+    "maggi kari",
+    "maggi tomyam",
+    "maggi tomyamunsorted",
+    "marigold",
+    "mr potato",
+    "nestle koko unsorted",
+    "nestle koko",
+    "nestle milo unsorted",
+    "nestle milo",
+    "nestle stars unsorted",
+    "nestle stars",
+    "ping pong",
+    "roma malkist",
+    "twisties ori",
+    "twisties sco",
+    "yeos greentea",
+    "yeos tebu"
+]
+
 @app.route("/objectdetection/", methods=["POST"])
 def predict():
     if not request.method == "POST":
@@ -26,7 +53,7 @@ def predict():
         image_bytes = image_file.read()
         img = Image.open(io.BytesIO(image_bytes))
         results = model(img)
-
+        
         # Annotate the image with bounding boxes and class labels
         annotated_img = annotate_image(img, results[0].boxes.xyxy.tolist(), results[0].boxes.cls.tolist())
 
@@ -36,9 +63,78 @@ def predict():
         # Save the annotated image as a JPG file
         annotated_img.save(output_filename, format="JPEG")
         
-        # Return the path to the saved annotated image
-        return {"result": f"Annotated image saved at: {output_filename}"}
+        # Out_of_stock
+        # Perform out of stock detection
+        product_names = [item_list[int(class_label)] for class_label in results[0].boxes.cls.tolist()]
+        oos_maggi_kari,oos_maggi_tomyam, oos_nestle_koko, oos_nestle_milo, oos_nestle_star= out_of_stock_product(product_names)
+        
+        comp_maggi = "N/A"
+        eye_level_status_maggi = "N/A"
+        comp_nestle = "N/A"
+        eye_level_status_nestle = "N/A"
+        
+        if oos_maggi_kari == "No" or oos_maggi_tomyam == "No" :
+            if oos_nestle_koko == "No" or oos_nestle_milo == "No" or oos_nestle_star == "No":
+                # Process only complience_nestle and nestle_eye_level_check
+                comp_maggi = complience_maggi(product_names)
+                eye_level_status_maggi = maggi_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+                comp_nestle = complience_nestle(product_names)
+                eye_level_status_nestle = nestle_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+            else:
+                comp_maggi = complience_maggi(product_names)
+                eye_level_status_maggi = maggi_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+                comp_nestle = "-"
+                eye_level_status_nestle = "-"
+        else:
+            
+            if oos_nestle_koko == "No" or oos_nestle_milo == "No" or oos_nestle_star == "No":  
+                # Process only complience_nestle and nestle_eye_level_check
+                comp_maggi = "-"
+                eye_level_status_maggi = "-"
+                comp_nestle = complience_nestle(product_names)
+                eye_level_status_nestle = nestle_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+            else:
+                comp_maggi = "-"
+                eye_level_status_maggi = "-"
+                comp_nestle = "-"
+                eye_level_status_nestle = "-"
+        
+        # if oos_nestle_koko == "No" or oos_nestle_milo == "No":
+        #     if oos_nestle_star == "No":
+        #         # Process only complience_nestle and nestle_eye_level_check
+        #         comp_maggi = "-"
+        #         comp_nestle = complience_nestle(product_names)
+        #         eye_level_status_nestle = nestle_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+        #         eye_level_status_maggi = "-"
+        # elif oos_maggi_kari == "No" or oos_maggi_tomyam == "No" or oos_nestle_koko == "No" or oos_nestle_milo == "No" or oos_nestle_star == "No":
+        #     # All OOS statuses are "No," process all checks
+        #     comp_maggi = complience_maggi(product_names)
+        #     comp_nestle = complience_nestle(product_names)
+        #     eye_level_status_nestle = nestle_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+        #     eye_level_status_maggi = maggi_eye_level_check(product_names, results[0].boxes.xyxy.tolist())
+        # else:
+        #     # If none of the above conditions are met, set compliance and eye level checks as "N/A"
+        #     comp_maggi = "-"
+        #     comp_nestle = "-"
+        #     eye_level_status_nestle = "-"
+        #     eye_level_status_maggi = "-"
 
+        # Return the path to the saved annotated image and the out of stock result in JSON format
+        response = {
+            "Result": f"Annotated image saved at: {output_filename}",
+            "Out of Stock Maggi Kari": oos_maggi_kari,
+            "Out of Stock Maggi Tomyam": oos_maggi_tomyam,
+            "Out of Stock Nestle Koko": oos_nestle_koko,
+            "Out of Stock Nestle Milo": oos_nestle_milo,
+            "Out of Stock Nestle Star": oos_nestle_star,
+            "Complience Maggi": comp_maggi,
+            "Complience Nestle": comp_nestle,
+            "Eye Level nestle": eye_level_status_nestle,
+            "Eye Level Maggi": eye_level_status_maggi,
+        }
+        return jsonify(response)
+    
+    
 def annotate_image(image, boxes, classes):
     img_draw = image.copy()
     draw = ImageDraw.Draw(img_draw)
