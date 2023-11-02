@@ -177,16 +177,17 @@ def nestle_eye_level_check(detected_products, detected_boxes):
             product_index = detected_products.index(product)
             product_box = detected_boxes[product_index]
             # Extract y_min and y_max values
-            y_min, y_max = product_box[0], product_box[2]
+            y_min, y_max = product_box[1], product_box[3]
             print("Coordinates for", product, ": y_min:", y_min, "y_max:", y_max)
             product_yaxis.append((y_min, y_max))  # Add y_min and y_max to the list
 
             # Assuming the boxes are in [x1, y1, x2, y2] format
             # Check if the product is NOT within the specified height range (2 meters)
-            if (950 < y_min <= 3000): 
+            if  (500 < y_min <= 600) and (600 < y_max <= 750) : #takde kat coordinat ni
                 nestle_eye_level_status = "Yes"  
-            else: #takde kat coordinat ni
-                nestle_eye_level_status = "No" # not eye level  
+            else:
+                nestle_eye_level_status = "No" # not eye level
+                
             
     return nestle_eye_level_status
 
@@ -211,16 +212,16 @@ def maggi_eye_level_check(detected_products, detected_boxes):
             product_index = detected_products.index(product)
             product_box = detected_boxes[product_index]
             # Extract y_min and y_max values
-            y_min, y_max = product_box[0], product_box[2] #patut dia ambil y axis, tp kene ambil x axis sbb gmbr terbalik
+            y_min, y_max = product_box[1], product_box[3] #patut dia ambil y axis, tp kene ambil x axis sbb gmbr terbalik
             print("Coordinates for", product, ": y_min:", y_min, "y_max:", y_max)
             product_yaxis.append((y_min, y_max))  # Add y_min and y_max to the list
 
             # Assuming the boxes are in [x1, y1, x2, y2] format
             # Check if the product is NOT within the specified height range (2 meters)
-            if (950 < y_min <= 3000): 
+            if  (500 < y_min <= 600) and (600 < y_max <= 750) : #takde kat coordinat ni
                 maggi_eye_level_status = "Yes"  
-            else: #takde kat coordinat ni
-                maggi_eye_level_status = "No" # not eye level  
+            else:
+                maggi_eye_level_status = "No"   # not eye level
                 
             
     return maggi_eye_level_status
