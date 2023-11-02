@@ -6,7 +6,7 @@ import nest_asyncio
 from pyngrok import ngrok
 from ultralytics import YOLO
 from oos_detection import out_of_stock_product, complience_maggi, complience_nestle, nestle_eye_level_check, maggi_eye_level_check
-#haloo
+
 
 app = Flask(__name__)
 model = YOLO('best_246.pt')
@@ -52,6 +52,23 @@ def predict():
         image_file = request.files["image"]
         image_bytes = image_file.read()
         img = Image.open(io.BytesIO(image_bytes))
+        
+        # rotate image
+        # Check and rotate based on EXIF data
+        exif = img._getexif()
+        if exif:
+            orientation = exif.get(0x0112)  # EXIF code for orientation
+            if orientation is not None:
+                if orientation == 1:
+                    # Normal orientation, no rotation needed
+                    pass
+                elif orientation == 3:
+                    img = img.rotate(180, expand=True)
+                elif orientation == 6:
+                    img = img.rotate(270, expand=True)
+                elif orientation == 8:
+                    img = img.rotate(90, expand=True)
+
         results = model(img)
         
         # Annotate the image with bounding boxes and class labels
@@ -66,6 +83,7 @@ def predict():
         # Out_of_stock
         # Perform out of stock detection
         product_names = [item_list[int(class_label)] for class_label in results[0].boxes.cls.tolist()]
+        print(product_names)
         oos_maggi_kari,oos_maggi_tomyam, oos_nestle_koko, oos_nestle_milo, oos_nestle_star= out_of_stock_product(product_names)
         
         comp_maggi = "N/A"
@@ -107,8 +125,8 @@ def predict():
             "Out of Stock Nestle Koko": oos_nestle_koko,
             "Out of Stock Nestle Milo": oos_nestle_milo,
             "Out of Stock Nestle Star": oos_nestle_star,
-            "Complience Maggi": comp_maggi,
-            "Complience Nestle": comp_nestle,
+            "Compliance Maggi": comp_maggi,
+            "Compliance Nestle": comp_nestle,
             "Eye Level nestle": eye_level_status_nestle,
             "Eye Level Maggi": eye_level_status_maggi,
         }

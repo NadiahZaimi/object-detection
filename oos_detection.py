@@ -104,55 +104,7 @@ def out_of_stock_product(detected_products):
         oos_nestle_star = "No" # In stock
     
     return oos_maggi_kari, oos_maggi_tomyam, oos_nestle_koko, oos_nestle_milo, oos_nestle_star
-    
-    
-    
-def out_of_stock_maggi(detected_products):
-    # List of products to check for out-of-stock
-    maggi_to_check = [
-        "maggi kari unsorted", "maggi kari", "maggi tomyam", "maggi tomyamunsorted"
-    ]
-    
-    # Initialize the out_of_stock status as False
-    out_of_stock = True #Out of Stock
 
-    # Check if any of the products are missing in the detected products
-    for product in maggi_to_check:
-        if product in detected_products: #checkProduct ade dlm list
-            # Set out_of_stock to False, bkn OOS
-            out_of_stock = False
-            break  # Exit the loop when not found any la
-
-    # Determine the status based on out_of_stock
-    if out_of_stock:
-        oos_maggi = "Yes" #Out of stock
-    else:
-        oos_maggi = "No" # In stock
-
-    return oos_maggi
-
-def out_of_stock_nestle(detected_products):
-   
-    nestle_to_check = [
-        "nestle koko unsorted", "nestle koko", "nestle milo unsorted", "nestle milo",
-        "nestle stars unsorted", "nestle stars"
-    ]
-
-    out_of_stock = True #Out of Stock
-
-    # Check 
-    for product in nestle_to_check:
-        if product in detected_products: #checkProduct ade dlm list
-            # Set out_of_stock to False, bkn OOS
-            out_of_stock = False
-            break  # Exit the loop when not found any la
-
-    if out_of_stock:
-        oos_nestle = "Yes" #Out of stock
-    else:
-        oos_nestle = "No" # In stock
-
-    return oos_nestle
 
 def complience_maggi(detected_products):
    
@@ -170,9 +122,9 @@ def complience_maggi(detected_products):
             break  # Exit the loop when not found any la
 
     if complience:
-        complience_maggi = "No" #not organized
+        complience_maggi = "Non Compliant" #not organized
     else:
-        complience_maggi = "Yes" # organized
+        complience_maggi = "Compliant" # organized
 
     return complience_maggi
 
@@ -192,35 +144,13 @@ def complience_nestle(detected_products):
             break  # Exit the loop when not found any la
 
     if complience:
-        complience_nestle = "No" #not organized
+        complience_nestle = "Non Compliant" #not organized
     else:
-        complience_nestle = "Yes" #organized
+        complience_nestle = "Compliant" #organized
 
     return complience_nestle
 
 
-#Check eye level
-#FIGHTING
-
-# def compliance_eye_level(detected_boxes, max_height):
-    
-#     nestle_to_check = [
-#         "nestle koko unsorted", "nestle koko", "nestle milo unsorted", "nestle milo",
-#         "nestle stars unsorted", "nestle stars"
-#         ]
-
-#     found_products = set(nestle_to_check)
-    
-#     for found_products in detected_boxes:
-#         x_min, y_min, x_max, y_max = found_products
-
-#         # You can add logic here to check if the coordinates match the specified criteria.
-#         # If any product doesn't meet the criteria, return "No".
-#         if not (y_min <= max_height <= y_max):
-#             return "No"
-
-#     # If the loop completes without returning "No," it means all products are in compliance.
-#     return "Yes"
 
 #check product ade 
 #dptkan coordinate product yg detect tu
@@ -233,7 +163,8 @@ def nestle_eye_level_check(detected_products, detected_boxes):
         "nestle koko unsorted", "nestle koko", "nestle milo unsorted", "nestle milo",
         "nestle stars unsorted", "nestle stars"
     ]
-    
+    # Initialize 
+    product_yaxis = []
     # Initialize eye level
     nestle_eye_level_status = "Yes"
 
@@ -242,15 +173,20 @@ def nestle_eye_level_check(detected_products, detected_boxes):
     for product in nestle_to_check:
         if product in detected_products: #checkProduct ade dlm list
             print("Product Detected:", product)
-             # Check the coordinates for this product
+            # Check the coordinates for this product
             product_index = detected_products.index(product)
             product_box = detected_boxes[product_index]
+            # Extract y_min and y_max values
+            y_min, y_max = product_box[0], product_box[2]
+            print("Coordinates for", product, ": y_min:", y_min, "y_max:", y_max)
+            product_yaxis.append((y_min, y_max))  # Add y_min and y_max to the list
+
             # Assuming the boxes are in [x1, y1, x2, y2] format
             # Check if the product is NOT within the specified height range (2 meters)
-            if not (1000 < product_box[3] <= 3000): #takde kat coordinat ni
-                nestle_eye_level_status = "No"  # not eye level
-                print("Coordinates for", product, ":", product_box)
-                break    
+            if (950 < y_min <= 3000): 
+                nestle_eye_level_status = "Yes"  
+            else: #takde kat coordinat ni
+                nestle_eye_level_status = "No" # not eye level  
             
     return nestle_eye_level_status
 
@@ -262,6 +198,7 @@ def maggi_eye_level_check(detected_products, detected_boxes):
         "maggi kari unsorted", "maggi kari", "maggi tomyam", "maggi tomyamunsorted"
     ]
     
+    product_yaxis = []
     # Initialize eye level
     maggi_eye_level_status = "Yes"
       
@@ -273,14 +210,17 @@ def maggi_eye_level_check(detected_products, detected_boxes):
              # Check the coordinates for this product
             product_index = detected_products.index(product)
             product_box = detected_boxes[product_index]
+            # Extract y_min and y_max values
+            y_min, y_max = product_box[0], product_box[2] #patut dia ambil y axis, tp kene ambil x axis sbb gmbr terbalik
+            print("Coordinates for", product, ": y_min:", y_min, "y_max:", y_max)
+            product_yaxis.append((y_min, y_max))  # Add y_min and y_max to the list
+
             # Assuming the boxes are in [x1, y1, x2, y2] format
             # Check if the product is NOT within the specified height range (2 meters)
-            if not (1000 < product_box[3] <= 3000): #takde kat coordinat ni
-                maggi_eye_level_status = "No"  # not eye level
-                print("Coordinates for", product, ":", product_box)
-                break      
+            if (950 < y_min <= 3000): 
+                maggi_eye_level_status = "Yes"  
+            else: #takde kat coordinat ni
+                maggi_eye_level_status = "No" # not eye level  
+                
             
     return maggi_eye_level_status
-
-
-
